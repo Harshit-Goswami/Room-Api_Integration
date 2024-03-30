@@ -1,27 +1,38 @@
 package com.example.sampletask
 
-import androidx.appcompat.app.AppCompatActivity
+import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Bundle
-import android.text.method.ScrollingMovementMethod
 import android.util.Log
+import android.view.Gravity
+import android.view.View
+import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.annotation.WorkerThread
+import android.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.marginTop
 import androidx.lifecycle.lifecycleScope
 import com.example.sampletask.data.local.UserEntity
 import com.example.sampletask.databinding.ActivityMainBinding
-import com.example.sampletask.model.UserResponse
+import com.example.sampletask.databinding.DialogLoginBinding
+import com.example.sampletask.databinding.DialogProfileBinding
+import com.example.sampletask.model.Data
 import com.example.sampletask.utils.ApiState
 import com.example.sampletask.utils.DbState
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import okhttp3.Dispatcher
 import java.io.File
+
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     lateinit var binding: ActivityMainBinding
+   lateinit var profileBinding : DialogProfileBinding
     private val mainViewModel: MainViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,11 +47,9 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "Invalid phone number", Toast.LENGTH_SHORT).show()
             }
         }
-        binding.btnGetUser.setOnClickListener {
+        binding.loggedUser.setOnClickListener {
             getLoggedUser()
         }
-        binding.textView.movementMethod = ScrollingMovementMethod()
-
     }
 
     private fun getUserData(phoneNumber: String) {
@@ -54,6 +63,7 @@ class MainActivity : AppCompatActivity() {
                         Toast.makeText(applicationContext, "Error : ${it.msg}", Toast.LENGTH_SHORT)
                             .show()
                     }
+
                     is ApiState.Loading -> {
                         Toast.makeText(
                             applicationContext,
@@ -61,32 +71,24 @@ class MainActivity : AppCompatActivity() {
                             Toast.LENGTH_SHORT
                         ).show()
                     }
+
                     is ApiState.Success -> {
-                        binding.textView.text = it.data.toString()
-                        if (it.data.Data.isNotEmpty()){
+                        if (it.data.Data.isNotEmpty()) {
                             Toast.makeText(
                                 applicationContext,
                                 "User Found -${it.data.Data[0].customername}",
                                 Toast.LENGTH_SHORT
                             ).show()
-                            val i = it.data.Data[0]
-                            saveUserData(
-                                UserEntity(
-                                    address = i.address,
-                                    cityname =
-                                    i.cityname,
-                                    customerid = i.customerid,
-                                    customername = i.customername,
-                                    emailid = i.emailid,
-                                    gender = i.gender,
-                                    password = i.password,
-                                    personalcontact = i.personalcontact,
-                                    pincode = i.pincode,
-                                    statename = i.statename
-                                )
-                            )
+                            showLoginDialog(it.data.Data[0])
+                            Log.d("API_STATE", "Data : ${it.data}")
+                        } else {
+                            Toast.makeText(
+                                applicationContext,
+                                "User Not Found",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
-                        Log.d("API_STATE", "Data : ${it.data}")
+                        mainViewModel.userStateFlow.value = ApiState.Empty
 
                     }
                 }
@@ -95,7 +97,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getLoggedUser() {
-        if (databaseFileExists()){
+        if (databaseFileExists()) {
             lifecycleScope.launch(Dispatchers.IO) {
                 mainViewModel.getUser()
                 mainViewModel._loggedUserStateFlow.collect() {
@@ -133,22 +135,17 @@ class MainActivity : AppCompatActivity() {
 
                         is DbState.Success -> {
                             launch(Dispatchers.Main) {
-                                binding.textView.text = it.data.toString()
-                                Toast.makeText(
-                                    applicationContext,
-                                    "Success",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                showProfileDialog(it.data)
                             }
 
                         }
                     }
                 }
             }
-        }else{
+        } else {
             Toast.makeText(
                 applicationContext,
-                "Database is not Exist!",
+                "User Not Found",
                 Toast.LENGTH_SHORT
             ).show()
         }
@@ -171,11 +168,131 @@ class MainActivity : AppCompatActivity() {
             firstChar != '0'
         }
     }
+
     private fun databaseFileExists(): Boolean {
         return try {
             File(getDatabasePath("UserDatabase").absolutePath).exists()
-        }catch (e: Exception){
+        } catch (e: Exception) {
             false
         }
     }
+
+    private fun showLoginDialog(data: Data) {
+        val loginBinding = DialogLoginBinding.inflate(layoutInflater)
+        try {
+            val loginDataDialog = AlertDialog.Builder(
+                this@MainActivity,
+                R.style.CustomAlertDialogLogin
+            ).create()
+            loginDataDialog.window?.setGravity(Gravity.CENTER)
+            loginDataDialog.setCancelable(true)
+            loginDataDialog.setView(loginBinding.root)
+            loginDataDialog.setCanceledOnTouchOutside(true)
+            loginDataDialog.show()
+
+        } catch (e: Exception) {
+            Log.d("dialog Error-", "${e.message}")
+        }
+        val loginMap = data.serializeToMap()
+        loginMap.forEach { key, value ->
+            val tv = TextView(this)
+            tv.setText("$key - $value")
+            tv.textSize = 18f
+            tv.setPadding(30, 5, 30, 5)
+            tv.setTextColor(Color.BLACK)
+//            tv.setBackgroundResource(R.drawable.unselected_product_unit_layout)
+            tv.setTypeface(tv.typeface, Typeface.BOLD)
+            val lp = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            lp.setMargins(15, 0, 15, 0)
+            tv.layoutParams = lp
+            loginBinding.dialogLinLayLogin.addView(tv)
+        }
+
+        loginBinding.btnGetUser.setOnClickListener {
+            saveUserData(
+                UserEntity(
+                    address = data!!.address,
+                    cityname =
+                    data.cityname,
+                    customerid = data.customerid,
+                    customername = data.customername,
+                    emailid = data.emailid,
+                    gender = data.gender,
+                    password = data.password,
+                    personalcontact = data.personalcontact,
+                    pincode = data.pincode,
+                    statename = data.statename
+                )
+            )
+        }
+    }
+
+    private fun showProfileDialog(dbUser: UserEntity) {
+        profileBinding = DialogProfileBinding.inflate(layoutInflater)
+        try {
+            val profileDataDialog = AlertDialog.Builder(
+                this@MainActivity,
+                R.style.CustomAlertDialogLogin
+            ).create()
+            profileDataDialog.window?.setGravity(Gravity.TOP)
+            profileDataDialog.setCancelable(true)
+            profileDataDialog.setView(profileBinding.root)
+            profileDataDialog.setCanceledOnTouchOutside(true)
+            profileDataDialog.show()
+
+        } catch (e: Exception) {
+            Log.d("dialog Error-", "${e.message}")
+        }
+        val dbMap = dbUser.serializeToMap()
+        addTextView("Id", dbMap["customerid"].toString())
+        addTextView("Name", dbMap["customername"].toString())
+        addTextView("Mobile No", dbMap["personalcontact"].toString())
+        addTextView("Gender", dbMap["gender"].toString())
+        addTextView("Email", dbMap["emailid"].toString())
+        addTextView("Address", dbMap["address"].toString())
+        addTextView("City Name", dbMap["cityname"].toString())
+        addTextView("State Name", dbMap["statename"].toString())
+        addTextView("Pincode", dbMap["pincode"].toString())
+    }
+
+    fun addTextView(key: String, value: String) {
+        val tv = TextView(this)
+        tv.setText("$key:  $value")
+        tv.textSize = 20f
+        tv.setPadding(30, 10, 30, 5)
+        tv.setTextColor(Color.BLACK)
+        tv.setBackgroundResource(R.drawable.text_view_bg)
+        tv.setTypeface(tv.typeface, Typeface.BOLD)
+        val lp = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+        lp.setMargins(15, 10, 15, 10)
+        tv.layoutParams = lp
+        profileBinding.dialogLinLayProfile.addView(tv)
+    }
+
+    //data class to map
+    fun <T> T.serializeToMap(): Map<String, Any> {
+        return convert()
+    }
+
+    //convert a map to a data class
+    inline fun <reified T> Map<String, Any>.toDataClass(): T {
+        return convert()
+    }
+
+    inline fun <I, reified O> I.convert(): O {
+        val gson = Gson()
+        val json = gson.toJson(this)
+        return gson.fromJson(json, object : TypeToken<O>() {}.type)
+    }
+
+    /*private fun studentChangePasswordSetUp() {
+
+    }
+*/
 }

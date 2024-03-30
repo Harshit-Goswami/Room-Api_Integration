@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="circular">
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <style name="ShapeCornerCut" parent="ShapeAppearance.MaterialComponents.SmallComponent">
+        <item name="cornerFamily">cut</item>
+        <item name="cornerSize">14dp</item>
+    </style>
+
+    <style name="ShapeCornerRounded" parent="ShapeAppearance.MaterialComponents.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">10dp</item>
+    </style>
+
+
+    <style name="CustomAlertDialogLogin" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:windowBackground">@drawable/custom_dialog_login</item>
+    </style>
+
+<!--    <style name="CustomAlertDialogProfile" parent="Theme.AppCompat.Light.Dialog.Alert">-->
+<!--        <item name="android:windowBackground">@drawable/alert_dialog_bg_edit_profile</item>-->
+<!--    </style>-->
+</resources>

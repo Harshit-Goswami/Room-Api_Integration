@@ -19,7 +19,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(private val userRepo: UserRepo) : ViewModel() {
-    private val userStateFlow: MutableStateFlow<ApiState> = MutableStateFlow(ApiState.Empty)
+     val userStateFlow: MutableStateFlow<ApiState> = MutableStateFlow(ApiState.Empty)
     val _userStateFlow: StateFlow<ApiState> = userStateFlow
 
     private val loggedUserStateFlow: MutableStateFlow<DbState> = MutableStateFlow(DbState.Empty)

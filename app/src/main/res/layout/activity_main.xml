@@ -1,44 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white"
     tools:context=".MainActivity">
 
-    <EditText
-        android:id="@+id/editTextPhoneNumber"
+    <androidx.appcompat.widget.Toolbar android:id="@+id/toolbar"
+        android:layout_alignParentTop="true"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_marginTop="10dp"
-        android:hint="Enter Phone Number"
-        android:inputType="number"
-        android:maxLength="10" />
+        android:background="@color/light_black"
+        >
+<RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    >
+    <com.google.android.material.textview.MaterialTextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sample Task"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:textSize="24sp"
+        android:layout_centerInParent="true"/>
+    <ImageButton
+        android:id="@+id/logged_user"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="10dp"
+        android:background="@drawable/icon_bg"
+        android:src="@drawable/baseline_person"
+        app:tint="@color/white" />
+</RelativeLayout>
+    </androidx.appcompat.widget.Toolbar>
 
-    <Button
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/TILeditText"
+        style="@style/ThemeOverlay.Material3.TextInputEditText.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter Phone Number"
+        android:layout_centerInParent="true"
+        app:boxCornerRadiusBottomEnd="10dp"
+        app:boxCornerRadiusBottomStart="10dp"
+        app:boxCornerRadiusTopEnd="10dp"
+        app:boxCornerRadiusTopStart="10dp"
+        app:boxStrokeColor="@color/black"
+        app:hintTextColor="@color/black"
+        app:startIconDrawable="@drawable/baseline_phone"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        app:startIconTint="@color/black">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/editTextPhoneNumber"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:maxLength="10" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/buttonLogin"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/editTextPhoneNumber"
+        android:layout_below="@id/TILeditText"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="8dp"
-        android:text="Login &amp; Save User " />
-    <Button
-        android:id="@+id/btnGetUser"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:layout_below="@id/buttonLogin"
-        android:layout_centerHorizontal="true"
-        android:text="Get User From Databese" />
+        android:layout_margin="20dp"
+        android:text="Login"
+        app:shapeAppearanceOverlay="@style/ShapeCornerCut" />
 
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:textSize="20sp"
-        android:layout_marginStart="5dp"
-        android:layout_marginTop="20dp"
-        android:layout_below="@+id/btnGetUser"/>
 </RelativeLayout>
 
